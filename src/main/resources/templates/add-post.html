@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Добавление поста</title>
+    <style>
+        .drop-zone {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 50%;
+            margin: 10px auto;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .comment-textarea {
+            width: 100%;
+            height: 200px;
+        }
+
+        img {
+            max-height: 300px;
+        }
+
+        table {
+            width: 60%;
+            margin: auto;
+        }
+
+        textarea {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <a href="/posts" style="float:right;"><b>НА ГЛАВНУЮ &cudarrr;</b></a>
+
+    <h2 style="text-align: center;">Добавление поста</h2>
+
+    <form th:action="@{/posts}" method="post">
+        <table>
+            <tr>
+                <td>
+                    <h3>Заголовок</h3>
+                    <textarea rows="2" name="title" th:text="${post.title}"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <h3>Текст</h3>
+                    <textarea rows="10" name="text" th:text="${post.text}" class="comment-textarea"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <h3>Теги</h3>
+                    <textarea rows="2" style="width: 100%;" name="tags" th:text="${tagsAsText}"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="hidden" name="imageUrl" th:id="imageUrl" th:value="${post.imageUrl}">
+                    <h3>Изображение</h3>
+                    <div class="drop-zone" id="drop-zone">
+                        <button type="button" id="select-file-btn">Выбрать файл</button>
+                        <input type="file" id="file-input" style="display:none" accept="image/*" />
+                        <div id="preview" style="margin-top: 10px;">
+                            <img th:if="${post.imageUrl}" th:src="${post.imageUrl}" style="width: 100%;"
+                                id="preview-img" />
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align:right;">
+                    <button type="submit">Создать</button>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const selectFileBtn = document.getElementById('select-file-btn');
+        const imageUrlInput = document.getElementById('imageUrl');
+        const previewDiv = document.getElementById('preview');
+
+        selectFileBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            uploadFile(e.target.files[0]);
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = '#eee';
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = 'transparent';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = 'transparent';
+            if (e.dataTransfer.files.length) {
+                uploadFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        function uploadFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Можно загружать только изображения!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetch("/posts/uploadImage", {
+                method: "POST",
+                body: formData,
+                headers: { "Accept": "application/json" }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error("Сервер вернул ошибку");
+                    return response.json();
+                })
+                .then(data => {
+                    imageUrlInput.value = data.url;
+                    let img = document.getElementById("preview-img");
+                    if (!img) {
+                        img = document.createElement("img");
+                        img.id = "preview-img";
+                        img.style.maxHeight = "300px";
+                        previewDiv.appendChild(img);
+                    }
+                    img.src = data.url;
+                })
+                .catch(err => {
+                    console.error("Ошибка загрузки изображения", err);
+                });
+        }
+    </script>
+
+</body>
+
+</html>

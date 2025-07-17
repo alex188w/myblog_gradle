@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Блог — Посты</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .post {
+            border-bottom: 1px solid #ccc;
+            padding: 20px 0;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .tags span {
+            background-color: #f2f2f2;
+            padding: 4px 8px;
+            margin-right: 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Список постов</h1>
+        <form method="GET" th:action="@{/posts/add}">
+            <button type="submit">Добавить пост</button>
+        </form>
+    </header>
+
+    <section>
+        <form method="GET" th:action="@{/posts}">
+            <p>
+                <label for="search">Найти по тегу:</label>
+                <input type="text" id="search" name="search" th:value="${search}" />
+                <button type="submit">&#128269;</button>
+            </p>
+            <p>
+                <label for="pageSize">Число постов:</label>
+                <select id="pageSize" name="size" onchange="this.form.submit()">
+                    <option th:each="sizeOption : ${new int[]{5,10,20,50,100}}" th:value="${sizeOption}"
+                        th:text="${sizeOption}" th:selected="${sizeOption == pageSize}">
+                    </option>
+                </select>
+            </p>
+            <p>
+                <button type="submit" th:if="${currentPage > 0}" name="page" th:value="${currentPage - 1}">&lt;
+                    Назад</button>
+                <span>Страница:
+                    <span th:text="${currentPage != null ? currentPage + 1 : 1}">1</span>
+                </span>
+                <button type="submit" th:if="${currentPage != null and (currentPage + 1) * pageSize < total}"
+                    name="page" th:value="${currentPage + 1}">
+                    Вперёд &gt;
+                </button>
+            </p>
+        </form>
+    </section>
+
+    <section th:each="post : ${posts}" class="post">
+        <h2 th:text="${post.title}">Заголовок</h2>
+
+        <a th:href="@{/posts/{id}(id=${post.id})}">
+            <img th:if="${post.imageUrl != null}" th:src="@{${post.imageUrl}}" alt="Обложка поста"
+                style="max-width: 100%; max-height: 300px;" />
+        </a>
+
+        <p th:text="${post.text}">Текст поста</p>
+
+        <p>👍 <span th:text="${post.likes}">0</span></p>
+
+        <div class="tags">
+            <span th:each="tag : ${tags}" th:text="'#' + ${tag.name}"></span>
+        </div>
+
+        <div class="comments">
+            <h3>Комментарии</h3>
+            <div th:each="comment : ${comments}">
+                <b th:text="${comment.author}">Автор</b>:
+                <span th:text="${comment.content}">Комментарий</span>
+                <small th:text="${#dates.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}">Дата</small>
+            </div>
+        </div>
+    </section>
+
+</body>
+
+</html>

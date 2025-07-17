@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.title} ?: 'Новый пост'">Пост</title>
+    <style>
+        .comment-textarea {
+            width: 100%;
+            height: 100px;
+        }
+
+        .comment-current {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            border-left: thin solid grey;
+            padding-left: 10px;
+        }
+
+        .tags {
+            color: #555;
+            font-size: 14px;
+        }
+
+        img {
+            max-height: 300px;
+        }
+    </style>
+
+    <script th:if="${not isNew}">
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll(".comment-content").forEach(elem => {
+                elem.addEventListener("click", () => {
+                    const commentId = elem.dataset.id;
+                    const currentText = elem.innerText;
+                    const form = document.getElementById("form-" + commentId);
+
+                    const textarea = document.createElement("textarea");
+                    textarea.name = "content";
+                    textarea.value = currentText;
+                    textarea.rows = 3;
+                    textarea.style.width = "100%";
+
+                    textarea.addEventListener("keydown", (e) => {
+                        if (e.ctrlKey && e.key === "Enter") {
+                            form.submit();
+                        }
+                    });
+
+                    elem.replaceWith(textarea);
+                    textarea.focus();
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <a href="/posts" style="float:right;"><b>НА ГЛАВНУЮ &cudarrr;</b></a>
+
+    <div style="width:60%;margin:auto;">
+
+        <h2 th:text="${isNew} ? 'Добавление поста' : (post.title ?: 'Без названия')">Заголовок</h2>
+
+        <form th:action="${isNew} ? @{/posts} : @{'/posts/' + ${post.id} + '/edit'}" method="post">
+            <input type="text" name="title" th:value="${post.title}" placeholder="Заголовок" required
+                style="width:100%;margin-bottom:10px;">
+
+            <textarea name="text" placeholder="Текст поста" required class="comment-textarea"
+                th:text="${post.text}"></textarea>
+<!-- 
+            <input type="text" name="tags" th:value="${#strings.listJoin(tags.?[name], ', ')}"
+                placeholder="теги через запятую" style="width:100%;margin:10px 0;"> -->
+
+            <input type="text" name="imageUrl" th:value="${post.imageUrl}" placeholder="URL картинки"
+                style="width:100%;">
+
+            <button type="submit" style="margin-top:10px;" th:text="${isNew} ? 'Создать' : 'Сохранить'"></button>
+        </form>
+
+        <div th:if="${not isNew}">
+            <form method="GET" th:action="@{'/posts/' + ${post.id} + '/edit'}">
+                <button style="float:right;">РЕДАКТИРОВАТЬ ПОСТ</button>
+            </form>
+
+            <form method="POST" th:action="@{'/posts/' + ${post.id} + '/delete'}">
+                <button style="float:right;">УДАЛИТЬ ПОСТ</button>
+            </form>
+
+            <div th:if="${post.imageUrl}">
+                <img th:src="${post.imageUrl}" alt="Картинка поста" style="margin-top:10px;">
+            </div>
+
+            <!-- <p th:text="${post.content}" style="margin-top:10px;">Текст поста</p> -->
+
+            <div class="tags">
+                <span th:each="tag : ${tags}" th:text="'#' + ${tag.name} + ' '">#тег</span>
+            </div>
+
+            <form th:action="@{'/posts/' + ${post.id} + '/like'}" method="post" style="margin-top: 10px;">
+                <button name="like" value="true">&#x1F44D;</button>
+                <span th:text="${post.likes}">0</span>
+                <button name="like" value="false">&#128078;</button>
+                <span th:text="${'комментарии: ' + comments.size()}" style="float:right;"></span>
+            </form>
+
+            <hr>
+            <h2>Комментарии</h2>
+
+            <div th:each="comment : ${comments}" class="comment-current">
+                <strong th:text="${comment.author}">Автор</strong>
+                <em th:text="${#temporals.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}">Дата</em>
+
+                <form th:id="'form-' + ${comment.id}"
+                    th:action="@{'/posts/' + ${post.id} + '/comments/' + ${comment.id}}" method="post">
+                    <span class="comment-content" th:data-id="${comment.id}"
+                        th:text="${comment.content}">Комментарий</span>
+                </form>
+
+                <form th:action="@{'/posts/' + ${post.id} + '/comments/' + ${comment.id} + '/delete'}" method="post">
+                    <button style="float:right;">Удалить</button>
+                </form>
+            </div>
+
+            <form id="addCommentForm" th:action="@{'/posts/' + ${post.id} + '/comments'}" method="post">
+                <textarea class="comment-textarea" name="content" placeholder="Введите комментарий" required></textarea>
+                <button type="submit" style="float:right;">Добавить комментарий</button>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+
+</html>
