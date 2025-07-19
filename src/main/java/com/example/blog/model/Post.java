@@ -24,7 +24,4 @@ public class Post {
     private String text;
 
     private int likes;
-
-    // Связь с тегами и комментариями будем загружать через сервисы
-    // (Spring Data JDBC не поддерживает @OneToMany и @ManyToMany напрямую)
 }

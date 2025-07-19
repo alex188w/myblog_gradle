@@ -12,10 +12,10 @@ CREATE TABLE posts (
     likes INT DEFAULT 0
 );
 
-CREATE TABLE tags (
-    id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL
-);
+-- CREATE TABLE tags (
+--     id SERIAL PRIMARY KEY,
+--     name TEXT UNIQUE NOT NULL
+-- );
 
 CREATE TABLE post_tags (
     post_id INT REFERENCES posts(id) ON DELETE CASCADE,

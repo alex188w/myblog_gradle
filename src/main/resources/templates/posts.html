@@ -50,7 +50,7 @@
         <form method="GET" th:action="@{/posts}">
             <p>
                 <label for="search">Найти по тегу:</label>
-                <input type="text" id="search" name="search" th:value="${search}" />
+                <input type="text" id="search" name="tag" th:value="${selectedTag}" />
                 <button type="submit">&#128269;</button>
             </p>
             <p>
@@ -83,22 +83,19 @@
                 style="max-width: 100%; max-height: 300px;" />
         </a>
 
+        <div class="tags" th:if="${post.id != null and postTags[post.id] != null}">
+            <span th:each="tag : ${postTags[post.id]}">Теги: 
+                <a th:href="@{/posts(tag=${tag.name})}" th:text="${tag.name}" style="margin-right: 5px;"></a>
+            </span>
+        </div>
+
         <p th:text="${post.text}">Текст поста</p>
 
-        <p>👍 <span th:text="${post.likes}">0</span></p>
-
-        <div class="tags">
-            <span th:each="tag : ${tags}" th:text="'#' + ${tag.name}"></span>
-        </div>
-
-        <div class="comments">
-            <h3>Комментарии</h3>
-            <div th:each="comment : ${comments}">
-                <b th:text="${comment.author}">Автор</b>:
-                <span th:text="${comment.content}">Комментарий</span>
-                <small th:text="${#dates.format(comment.createdAt, 'dd.MM.yyyy HH:mm')}">Дата</small>
-            </div>
-        </div>
+        <!-- <p>👍 <span th:text="${post.likes}">0</span></p> -->
+        <p>
+            👍 <span style="margin-right: 50px;" th:text="${post.likes}">0</span>
+            ✉ <span th:text="'комментариев: ' + ${commentCounts[post.id]}">0</span>
+        </p>
     </section>
 
 </body>

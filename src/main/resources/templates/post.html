@@ -64,15 +64,14 @@
 
         <h2 th:text="${isNew} ? 'Добавление поста' : (post.title ?: 'Без названия')">Заголовок</h2>
 
+        <img th:if="${post.imageUrl}" th:src="${post.imageUrl}" style="max-width: 100%; margin-bottom: 20px;" />
+
         <form th:action="${isNew} ? @{/posts} : @{'/posts/' + ${post.id} + '/edit'}" method="post">
             <input type="text" name="title" th:value="${post.title}" placeholder="Заголовок" required
                 style="width:100%;margin-bottom:10px;">
 
             <textarea name="text" placeholder="Текст поста" required class="comment-textarea"
                 th:text="${post.text}"></textarea>
-<!-- 
-            <input type="text" name="tags" th:value="${#strings.listJoin(tags.?[name], ', ')}"
-                placeholder="теги через запятую" style="width:100%;margin:10px 0;"> -->
 
             <input type="text" name="imageUrl" th:value="${post.imageUrl}" placeholder="URL картинки"
                 style="width:100%;">
@@ -88,12 +87,6 @@
             <form method="POST" th:action="@{'/posts/' + ${post.id} + '/delete'}">
                 <button style="float:right;">УДАЛИТЬ ПОСТ</button>
             </form>
-
-            <div th:if="${post.imageUrl}">
-                <img th:src="${post.imageUrl}" alt="Картинка поста" style="margin-top:10px;">
-            </div>
-
-            <!-- <p th:text="${post.content}" style="margin-top:10px;">Текст поста</p> -->
 
             <div class="tags">
                 <span th:each="tag : ${tags}" th:text="'#' + ${tag.name} + ' '">#тег</span>
@@ -119,8 +112,9 @@
                         th:text="${comment.content}">Комментарий</span>
                 </form>
 
-                <form th:action="@{'/posts/' + ${post.id} + '/comments/' + ${comment.id} + '/delete'}" method="post">
-                    <button style="float:right;">Удалить</button>
+                <form th:action="@{'/posts/' + ${post.id} + '/comments/' + ${comment.id} + '/delete'}" method="post"
+                    style="margin-top: 5px;">
+                    <button style="float:right;">&#10007;</button>
                 </form>
             </div>
 

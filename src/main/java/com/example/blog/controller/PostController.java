@@ -1,16 +1,24 @@
 package com.example.blog.controller;
 
 import com.example.blog.service.PostService;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.blog.model.Post;
 import com.example.blog.model.Tag;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.example.blog.model.Comment;
 
@@ -25,14 +33,23 @@ public class PostController {
     }
 
     @GetMapping
-    public String listPosts(@RequestParam(defaultValue = "") String search,
+    public String listPosts(@RequestParam(value = "tag", required = false) String tag,
             Model model) {
-        List<Post> posts = postService.findByTitle(search);
+        List<Post> posts = (tag != null)
+                ? postService.findByTagName(tag)
+                : postService.findAll();
+
+        Map<Integer, List<Tag>> postTags = postService.getTagsForPosts(posts);
+
+        Map<Integer, Integer> commentCounts = posts.stream()
+                .collect(Collectors.toMap(Post::getId,
+                        p -> postService.getCommentCountByPostId(p.getId())));
+
         model.addAttribute("posts", posts);
-        model.addAttribute("search", search);
-        model.addAttribute("currentPage", 0); // временно
-        model.addAttribute("pageSize", 10);
-        model.addAttribute("total", posts.size());
+        model.addAttribute("postTags", postTags);
+        model.addAttribute("commentCounts", commentCounts);
+        model.addAttribute("selectedTag", tag);
+
         return "posts";
     }
 
@@ -54,12 +71,12 @@ public class PostController {
         return "post";
     }
 
-@GetMapping("/add")
-public String showAddForm(Model model) {
-    model.addAttribute("post", new Post());
-    model.addAttribute("tagsAsText", ""); // пустая строка для формы
-    return "add-post";
-}
+    @GetMapping("/add")
+    public String showAddForm(Model model) {
+        model.addAttribute("post", new Post());
+        model.addAttribute("tagsAsText", ""); // пустая строка для формы
+        return "add-post";
+    }
 
     @PostMapping
     public String savePost(@ModelAttribute Post post,
@@ -106,4 +123,40 @@ public String showAddForm(Model model) {
                 .filter(s -> !s.isEmpty())
                 .toList();
     }
+
+    @PostMapping("/{id}/like")
+    public String likePost(@PathVariable Integer id, @RequestParam boolean like) {
+        Post post = postService.findById(id);
+        if (post == null) {
+            return "redirect:/posts";
+        }
+
+        int currentLikes = post.getLikes();
+        post.setLikes(like ? currentLikes + 1 : Math.max(0, currentLikes - 1));
+
+        postService.save(post); // Без тегов, сделаем перегрузку метода в PostService
+        return "redirect:/posts/" + id;
+    }
+
+    // Для загрузки изображений
+    @PostMapping(value = "/uploadImage", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public Map<String, String> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            String uploadDir = "C:/myapp/uploads/";
+            String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Path filepath = Paths.get(uploadDir, filename);
+            Files.createDirectories(filepath.getParent());
+            file.transferTo(filepath);
+
+            // Этот путь должен совпадать с тем, как раздаём /uploads/**
+            String fileUrl = "/uploads/" + filename;
+
+            return Map.of("url", fileUrl);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Ошибка загрузки файла: " + e.getMessage(), e);
+        }
+    }
+
 }
