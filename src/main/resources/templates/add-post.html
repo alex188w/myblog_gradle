@@ -9,7 +9,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            width: 50%;
+            width: 100%;
             margin: 10px auto;
             border: 2px dashed #ccc;
             padding: 20px;
@@ -43,7 +43,9 @@
 
     <h2 style="text-align: center;">Добавление поста</h2>
 
-    <form th:action="@{/posts}" method="post">
+    <form th:action="@{${isNew} ? '/posts' : '/posts/' + ${post.id} + '/edit'}" method="post">
+        <input type="hidden" th:if="${post.id != null}" name="id" th:value="${post.id}" />
+
         <table>
             <tr>
                 <td>
@@ -54,7 +56,7 @@
             <tr>
                 <td>
                     <h3>Текст</h3>
-                    <textarea rows="10" name="text" th:text="${post.text}" class="comment-textarea"></textarea>
+                    <textarea rows="12" name="text" th:text="${post.text}" class="comment-textarea"></textarea>
                 </td>
             </tr>
             <tr>
@@ -79,7 +81,7 @@
             </tr>
             <tr>
                 <td style="text-align:right;">
-                    <button type="submit">Создать</button>
+                    <button type="submit" th:text="${isNew} ? 'Добавить пост' : 'Сохранить изменения'">Сохранить</button>
                 </td>
             </tr>
         </table>

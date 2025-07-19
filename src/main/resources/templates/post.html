@@ -26,6 +26,14 @@
         img {
             max-height: 300px;
         }
+
+        .edit {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 55px;
+        }
     </style>
 
     <script th:if="${not isNew}">
@@ -60,9 +68,12 @@
 
     <a href="/posts" style="float:right;"><b>НА ГЛАВНУЮ &cudarrr;</b></a>
 
-    <div style="width:60%;margin:auto;">
+    <div style="width:50%;margin-left:auto;margin-right:auto;">
 
-        <h2 th:text="${isNew} ? 'Добавление поста' : (post.title ?: 'Без названия')">Заголовок</h2>
+        <!-- <h2 th:text="${isNew} ? 'Добавление поста' : #strings.defaultString(post.title, 'Без названия')">Заголовок</h2> -->
+
+        <h2 th:if="${isNew}">Добавление поста</h2>
+        <h2 th:if="${!isNew}" th:text="${post.title != null ? post.title : 'Без названия'}">Заголовок</h2>
 
         <img th:if="${post.imageUrl}" th:src="${post.imageUrl}" style="max-width: 100%; margin-bottom: 20px;" />
 
@@ -71,25 +82,13 @@
                 style="width:100%;margin-bottom:10px;">
 
             <textarea name="text" placeholder="Текст поста" required class="comment-textarea"
-                th:text="${post.text}"></textarea>
-
-            <input type="text" name="imageUrl" th:value="${post.imageUrl}" placeholder="URL картинки"
-                style="width:100%;">
-
-            <button type="submit" style="margin-top:10px;" th:text="${isNew} ? 'Создать' : 'Сохранить'"></button>
+                th:text="${post.text}"></textarea>            
         </form>
 
         <div th:if="${not isNew}">
-            <form method="GET" th:action="@{'/posts/' + ${post.id} + '/edit'}">
-                <button style="float:right;">РЕДАКТИРОВАТЬ ПОСТ</button>
-            </form>
-
-            <form method="POST" th:action="@{'/posts/' + ${post.id} + '/delete'}">
-                <button style="float:right;">УДАЛИТЬ ПОСТ</button>
-            </form>
 
             <div class="tags">
-                <span th:each="tag : ${tags}" th:text="'#' + ${tag.name} + ' '">#тег</span>
+                <span th:each="tag : ${tags}" th:text="'теги: #' + ${tag.name} + ' '">#тег</span>
             </div>
 
             <form th:action="@{'/posts/' + ${post.id} + '/like'}" method="post" style="margin-top: 10px;">
@@ -122,6 +121,16 @@
                 <textarea class="comment-textarea" name="content" placeholder="Введите комментарий" required></textarea>
                 <button type="submit" style="float:right;">Добавить комментарий</button>
             </form>
+
+            <div class="edit">
+                <form method="GET" th:action="@{'/posts/' + ${post.id} + '/edit'}">
+                    <button style="float:right;">РЕДАКТИРОВАТЬ ПОСТ</button>
+                </form>
+
+                <form method="POST" th:action="@{'/posts/' + ${post.id} + '/delete'}">
+                    <button style="float:right;">УДАЛИТЬ ПОСТ</button>
+                </form>
+            </div>
         </div>
 
     </div>

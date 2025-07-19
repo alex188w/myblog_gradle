@@ -8,6 +8,8 @@ import com.example.blog.repository.CommentRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -115,5 +117,54 @@ public class PostService {
             post.setLikes(rs.getInt("likes"));
             return post;
         }, tagName);
+    }
+
+    // для пагинации
+    public List<Post> findPaginated(int page, int size, String tag) {
+        int offset = page * size;
+        if (tag != null && !tag.isBlank()) {
+            String sql = """
+                        SELECT p.* FROM posts p
+                        JOIN post_tags pt ON p.id = pt.post_id
+                        JOIN tags t ON t.id = pt.tag_id
+                        WHERE t.name = ?
+                        ORDER BY p.id DESC
+                        LIMIT ? OFFSET ?
+                    """;
+            return jdbcTemplate.query(sql,
+                    (rs, rowNum) -> mapRowToPost(rs),
+                    tag, size, offset);
+        } else {
+            String sql = "SELECT * FROM posts ORDER BY id DESC LIMIT ? OFFSET ?";
+            return jdbcTemplate.query(sql,
+                    (rs, rowNum) -> mapRowToPost(rs),
+                    size, offset);
+        }
+    }
+
+    public int countPosts(String tag) {
+        if (tag != null && !tag.isBlank()) {
+            String sql = """
+                        SELECT COUNT(*) FROM posts p
+                        JOIN post_tags pt ON p.id = pt.post_id
+                        JOIN tags t ON t.id = pt.tag_id
+                        WHERE t.name = ?
+                    """;
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, tag);
+            return (count != null) ? count : 0;
+        } else {
+            Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM posts", Integer.class);
+            return (count != null) ? count : 0;
+        }
+    }
+
+    private Post mapRowToPost(ResultSet rs) throws SQLException {
+        return new Post(
+                rs.getInt("id"),
+                rs.getString("title"),
+                rs.getString("preview"),
+                rs.getString("image_url"),
+                rs.getString("text"),
+                rs.getInt("likes"));
     }
 }

@@ -33,14 +33,16 @@ public class PostController {
     }
 
     @GetMapping
-    public String listPosts(@RequestParam(value = "tag", required = false) String tag,
+    public String listPosts(
+            @RequestParam(value = "tag", required = false) String tag,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
             Model model) {
-        List<Post> posts = (tag != null)
-                ? postService.findByTagName(tag)
-                : postService.findAll();
+
+        List<Post> posts = postService.findPaginated(page, size, tag);
+        int totalPosts = postService.countPosts(tag);
 
         Map<Integer, List<Tag>> postTags = postService.getTagsForPosts(posts);
-
         Map<Integer, Integer> commentCounts = posts.stream()
                 .collect(Collectors.toMap(Post::getId,
                         p -> postService.getCommentCountByPostId(p.getId())));
@@ -49,6 +51,10 @@ public class PostController {
         model.addAttribute("postTags", postTags);
         model.addAttribute("commentCounts", commentCounts);
         model.addAttribute("selectedTag", tag);
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("total", totalPosts);
 
         return "posts";
     }
@@ -75,6 +81,7 @@ public class PostController {
     public String showAddForm(Model model) {
         model.addAttribute("post", new Post());
         model.addAttribute("tagsAsText", ""); // пустая строка для формы
+        model.addAttribute("isNew", true); // обязательно
         return "add-post";
     }
 
@@ -92,9 +99,18 @@ public class PostController {
         if (post == null) {
             return "redirect:/posts";
         }
+
         List<Tag> tags = postService.findTagsByPostId(id);
+
+        String tagsAsText = tags.stream()
+                .map(Tag::getName)
+                .collect(Collectors.joining(", "));
+
         model.addAttribute("post", post);
         model.addAttribute("tags", tags);
+        model.addAttribute("tagsAsText", tagsAsText);
+        model.addAttribute("isNew", false); // для заголовка и формы
+
         return "add-post";
     }
 

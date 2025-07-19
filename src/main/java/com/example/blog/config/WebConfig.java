@@ -5,7 +5,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 
-// для загрузки изображений. Spring Boot нужно явно указать, что /uploads/** — это маппинг к file:///C:/myapp/uploads/
+// Конфиг для загрузки изображений. Spring Boot нужно явно указать, что /uploads/** — это маппинг к file:///C:/myapp/uploads/
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 

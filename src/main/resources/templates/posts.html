@@ -75,7 +75,7 @@
         </form>
     </section>
 
-    <section th:each="post : ${posts}" class="post">
+    <section th:each="post : ${posts}" class="post" style="width:50%;margin-left:auto;margin-right:auto;">
         <h2 th:text="${post.title}">Заголовок</h2>
 
         <a th:href="@{/posts/{id}(id=${post.id})}">
