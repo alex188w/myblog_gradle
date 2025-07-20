@@ -2,16 +2,11 @@ package com.example.blog.Service;
 
 import com.example.blog.model.Comment;
 import com.example.blog.repository.CommentRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-
 import com.example.blog.service.CommentService;
-
-import java.time.LocalDateTime;
 import java.util.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

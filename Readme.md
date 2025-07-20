@@ -13,8 +13,8 @@
     - количество лайков к посту;
     - теги поста;
     - посты отображаются сверху вниз;
-    - фильтрация по тегу;
-    - пагинация (по 10, 20, 50 постов на странице).
+    - фильтрация по тегу, дополнительно реализована возможность фильтрации по тегу при нажатии на тег поста (является ссылкой) - при нажатии осуществляется вывод постов с выбранным тегом;
+    - пагинация (по 5, 10, 20, 50 постов на странице).
 * В ленте есть кнопка добавления поста, при нажатии на которую появляется форма добавления поста с возможностями:
     - добавления названия поста;
     - добавления картинки;
@@ -31,83 +31,103 @@
     - список комментариев (вложенность комментариев делать необязательно);
     - каждый комментарий содержит в себе текст комментария и возможность его редактирования/удаления.
 * Добавление или редактирование комментария осуществляется на текущей странице. При нажатии на комментарий его текст заменяется на поле текстового ввода, при нажатии на Ctrl+Enter комментарий сохраняется.
-* Приложение покрыто тестами (юнит- и интеграционными) с использованием JUnit 5, TestContext Framework и кэширования контекстов.
+* Приложение покрыто тестами (юнит- и интеграционными) с использованием JUnit 5, SpringBootTest и кеширования контекстов.
 
 
 ## Краткое описание работы приложения
 
-Очистка сборки и запуск веб-приложения на встроенном сервере Jetty - 
+Компиляция и запуск Spring Boot приложения на встроенном сервлет-контейнере Tomcat - 
 
-    mvn clean jetty:run.
+    ./gradlew bootRun
 
 Приложение открывается по адресу: http://localhost:8080/posts
 
 Приложение использует БД PostgreSQL.
 
-Для работы необходимо создать БД (напр. myblog) и файл с настройками по адоесу: src/main/resources/application.properties:
+Для работы необходимо создать БД (напр. blog) и файл с настройками по адоесу: src/main/resources/application.properties:
 
-    db.url=jdbc:postgresql://localhost:5432/myblog
+    db.url=jdbc:postgresql://localhost:5432/blog
     db.username=your_username
     db.password=your_password
+    spring.datasource.driver-class-name=org.postgresql.Driver
 
-    spring.jpa.hibernate.ddl-auto=update
-    spring.jpa.show-sql=true
-    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+    # Если хотим, чтобы schema.sql выполнялся каждый раз при запуске
+    # spring.sql.init.mode=always  
+    spring.sql.init.schema-locations=classpath:schema.sql
+    # spring.sql.init.platform=postgres
 
-В функционал добавлена возможность загрузки изображений из проводника на странице http://localhost:9090/posts/add.
+    spring.data.jdbc.repositories.enabled=true
+    spring.main.web-application-type=servlet
 
-Для загрузки изображений необходимо создать папку по адресу: C:/myapp/uploads/, или любой другой путь прописать в файле: src/main/java/example/config/WebConfig.java/.
+    spring.thymeleaf.prefix=classpath:/templates/
+    spring.thymeleaf.suffix=.html
+
+    spring.devtools.restart.enabled=true
+    spring.devtools.livereload.enabled=true
+
+    spring.thymeleaf.cache=false
+
+    org.gradle.caching=true
+
+В функционал добавлена возможность загрузки и сохранения изображений из проводника на странице http://localhost:8080/posts/add.
+
+Файл src\main\java\com\example\blog\config\WebConfig.java - файл конфигурации для отображения статических ресурсов (настройка маппинга URL-пути `/uploads/**` на локальную файловую систему).
+
+Для загрузки изображений необходимо создать папку по адресу: C:/myapp/uploads/, или любой другой путь прописать в данном файле: WebConfig.java.
 
 Загруженные изображения выводятся на странице ленты (/posts) в качестве обложки поста и на странице поста (/post/##)/
 
 ## Последовательность работы над приложением
 
-1. Настройка проекта
+1. Инициализация проекта
 
-Создание Maven-проекта: Примерная (начальная) структура каталогов:
+Переходим на сайт: https://start.spring.io/ - выбираем проект Gradle, добавляем необходимые зависимости:
+
+![Инициализация проекта](initializr.jpg)
+
+Нажимаем - Generate, распаковываем проект в выбранную директорию.
+
+Примерная (начальная) структура каталогов:
 
 ![Структура каталогов](directory.jpg)
  
-Настройка pom.xml (Maven):
+Пример (первоначальный) build.gradle (Groovy DSL):
 
-Указываем:
+![build.gradle](build_gradle.jpg)
 
-    *	Java 21
-    *	Зависимости: Spring MVC, Spring Context, JPA, PostgreSQL, Jackson, JSTL, Servlet API
-
-2. Конфигурация Spring
-
-•	Java-класс AppConfig со всеми бинами (включая JPA, ViewResolver и т.д.) - Java-based configuration
-
-•	Конфигурация AppInitializer.java (подключение DispatcherServlet)
+2. Настраиваем подключение к БД PostgreSQL в файле src/main/resources/application.properties (пример приведен выше).
 
 3. Сущности и БД
 
-•	Сущность Post с полями: id, title, content, imageUrl, tags, likesCount
+•	Сущность Post с полями: id, title, preview, imageUrl, text, likes
 
-•	Сущность Comment
+•	Сущность Comment полями: id, postId, author, content, createdAt.
 
-•	Конфигурация persistence.xml (или через Java)
+•	Сущность tag с полями: id, name.
 
-•	Скрипт создания схемы (schema.sql)
+В проекте используются 4 таблицы: post, comments, tags и post_tags.
+
+Таблица tags — справочник тегов, хранит уникальные названия тегов.
+
+Таблица post_tags — осуществляет связь "многие ко многим", позволяет постам иметь несколько тегов, и тегам относиться к нескольким постам:
+
 
 4. Контроллеры
 
 •	PostController: отображение ленты, отдельного поста, добавление, редактирование, удаление
 
-•	CommentController
+•	CommentController: добавляет, обновляет и удаляет комментарии.
 
 5. Frontend
 
 •	Используем HTML-шаблоны
 
-•	Добавляем JS: открытие модалки, лайк, добавление комментариев, ajax-запросы, загрузка фото
+•	Добавляем JS: открытие модалки, лайк, добавление комментариев, ajax-запросы, загрузка изоьражений.
 
 6. Деплой
 
-•	Настройка на запуск в Jetty (можно через mvn package → .war файл)
+•	Настройка запуска на встроенном сервлет-контейнере Tomcat.
 
-•	PostgreSQL: настройка и подключение к БД
 
 ## Тестирование
 
@@ -115,47 +135,64 @@
 
 * используется реальная СУБД PostgreSQL
 
-* задействована настоящая JPA-конфигурация (AppConfig, JpaConfig)
+* задействована настоящая SpringBoot конфигурация
 
 * выполняется чтение/запись в тестовую базу данных, а не в память
 
 * контроллеры и сервисы подключаются к реальному слою данных через полноценный Spring-контекст.
 
-Для работы тестов необходимо создать БД (напр. test) и файл с настройками по адоесу: src/test/resources/app.properties:
+Для работы тестов необходимо создать БД (напр. myblog_test) и прописать настройки в файле по адоесу: src/test/resources/application.properties:
 
-    db.url=jdbc:postgresql://localhost:5432/test
+    db.url=jdbc:postgresql://localhost:5432/myblog_test
     db.username=your_username
     db.password=your_password
+    spring.datasource.driver-class-name=org.postgresql.Driver
 
-    spring.jpa.hibernate.ddl-auto=update
-    spring.jpa.show-sql=true
-    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+    # Инициализация из SQL
+    # spring.sql.init.mode=always
+    spring.sql.init.schema-locations=classpath:schema.sql
+    spring.sql.init.data-locations=none
+    spring.sql.init.mode=never
+    # spring.sql.init.data-locations=classpath:data.sql
 
-Всего создано 17 тестов, протестированы следующие package:
+Всего создано 46 тестов, протестированы следующие package:
 
-* PostController - тип теста: Мок-тест контроллера (MockMvc + standaloneSetup). Тестируется:
+1. PostController:
 
-возврат страницы /posts, содержимого модели, правильной view через MockMvc.
+    1.1. PostControllerTest.java - тип теста unit-тест, цель: проверка логики PostController,
 
-* PostService - тип теста: Юнит + Интеграционный. Тестируется:
+    инструменты (JUnit 5, Mockito).
 
-получение, поиск, сохранение, удаление постов, фильтрация по тегам.
+    1.2. PostControllerIntegrationTest.java - тип теста: интеграционный, цель: загружает и проверяет полный контекст приложения, включая все бины, конфигурации, БД и т.д., интсрументы: Spring Boot Test.
 
-* CommentService -тип теста: Юнит + Интеграционный. Тестируется:
+2. CommentController:
 
-Получение, сохранение, удаление, редактирование комментариев.
+    2.1. CommentControllerTest.java - тип теста unit-тест, цель: проверка логики CommentController,
 
-* PostRepository - Интеграционный. Тестируется:
+    инструменты (JUnit 5, Mockito).
 
-Сохранение, поиск по ID, поиск по тегам, поиск постов с комментариями.
+    2.2. CommentControllerTest.java - тип теста: интеграционный, цель: загружает и проверяет полный контекст приложения, включая все бины, конфигурации, БД и т.д., интсрументы: Spring Boot Test.
 
-* CommentRepository - Интеграционный. Тестируется:
+3. PostService - тип теста unit-тест, цель: проверка логики PostService,
 
-Поиск комментариев по ID поста через findByPostId.
+    инструменты (JUnit 5, Mockito).
 
-Запуск отдельного теста: mvn surefire:test -Dtest=PostControllerTest (на примере PostControllerTest).
+4. CommentService - тип теста unit-тест, цель: проверка логики CommentService,
 
-Запуск всех тестов: mvn test.
+    инструменты (JUnit 5, Mockito).
+
+5. TagService - тип теста unit-тест, цель: проверка логики TagService,
+
+    инструменты (JUnit 5, Mockito).
+
+6. CommentRepository - тип теста: интеграционный, цель: проверить взаимодействие CommentRepository и PostRepository с реальной базой данных, использует реальную базу данных,  интсрументы: Spring Boot Test.
+
+7. PostRepository - тип теста: интеграционный, цель: проверить корректность работы методов PostRepository, взаимодействующих с реальной базой данных, в частности: сохранение и извлечение сущности Post, поиск постов по части заголовка (findByTitleContainingIgnoreCase), с учётом нечувствительности к регистру. Интсрументы: Spring Boot Test.
+
+8. TagRepository - тип теста: интеграционный, цель: проверить работу метода findByName(String name) в TagRepository, используя реальную базу данных, и убедиться в корректности: поиска существующего тега по имени, поведения метода при отсутствии совпадений (должен вернуть null).
+
+
+Запуск всех тестов: ./gradlew test
 
 Результат тестирования:
 

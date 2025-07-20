@@ -6,8 +6,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 import org.junit.jupiter.api.BeforeEach;
