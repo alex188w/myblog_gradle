@@ -19,6 +19,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("posts")
+/**
+ * Entity-класс, представляющий запись в таблице "posts".
+ * Используется для хранения информации о постах в блоге.
+ */
 public class PostEntity {
     @Id
     private Long id;
@@ -28,6 +32,10 @@ public class PostEntity {
     private String imageUrl;
     private int likes;
 
+    /**
+     * Список комментариев, связанных с этим постом.
+     * Связь происходит по колонке "post_id" в таблице комментариев.
+     */
     @MappedCollection(idColumn = "post_id")
     private List<CommentEntity> comments = new ArrayList<>();
 }

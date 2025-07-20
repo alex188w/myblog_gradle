@@ -12,6 +12,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("comments")
+/**
+ * Entity-класс, представляющий запись в таблице "comments".
+ * Используется для хранения комментариев к постам в блоге.
+ */
 public class Comment {
     @Id
     private Integer id;

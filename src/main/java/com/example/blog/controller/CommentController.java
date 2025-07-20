@@ -18,6 +18,13 @@ public class CommentController {
         this.commentService = commentService;
     }
 
+    /**
+     * Добавляет новый комментарий к посту.
+     *
+     * @param postId  ID поста, к которому добавляется комментарий
+     * @param content Текст комментария
+     * @return Редирект обратно на страницу поста
+     */
     @PostMapping
     public String addComment(@PathVariable Integer postId,
                              @RequestParam String content) {
@@ -25,6 +32,14 @@ public class CommentController {
         return "redirect:/posts/" + postId;
     }
 
+    /**
+     * Обновляет содержимое существующего комментария.
+     *
+     * @param postId     ID поста (для возврата)
+     * @param commentId  ID редактируемого комментария
+     * @param content    Новый текст комментария
+     * @return Редирект обратно на страницу поста
+     */
     @PostMapping("/{commentId}")
     public String updateComment(@PathVariable Integer postId,
                                 @PathVariable Integer commentId,
@@ -33,6 +48,13 @@ public class CommentController {
         return "redirect:/posts/" + postId;
     }
 
+    /**
+     * Удаляет комментарий.
+     *
+     * @param postId    ID поста (для возврата)
+     * @param commentId ID удаляемого комментария
+     * @return Редирект обратно на страницу поста
+     */
     @PostMapping("/{commentId}/delete")
     public String deleteComment(@PathVariable Integer postId,
                                 @PathVariable Integer commentId) {

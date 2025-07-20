@@ -10,6 +10,10 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("tags")
+/**
+ * Entity-класс, представляющий запись в таблице "tags".
+ * Используется для хранения тегов к постам в блоге.
+ */
 public class Tag {
     @Id
     private Integer id;

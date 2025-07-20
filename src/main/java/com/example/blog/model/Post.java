@@ -10,6 +10,10 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("posts")
+/**
+ * Entity-класс, представляющий запись в таблице "posts".
+ * Используется для хранения информации о постах в блоге.
+ */
 public class Post {
 
     @Id

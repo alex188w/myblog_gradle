@@ -27,7 +27,14 @@
             height: auto;
         }
 
+        .tags {
+            display: flex;
+            flex-direction: row;
+        }
+
         .tags span {
+            display: flex;
+            align-items: center;
             background-color: #f2f2f2;
             padding: 4px 8px;
             margin-right: 5px;
@@ -84,7 +91,8 @@
         </a>
 
         <div class="tags" th:if="${post.id != null and postTags[post.id] != null}">
-            <span th:each="tag : ${postTags[post.id]}">Теги: 
+            <p>Теги: </p>
+            <span th:each="tag : ${postTags[post.id]}"> 
                 <a th:href="@{/posts(tag=${tag.name})}" th:text="${tag.name}" style="margin-right: 5px;"></a>
             </span>
         </div>
